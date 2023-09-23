@@ -1,0 +1,63 @@
+version: '3.8'
+
+name: "best-todo"
+services:
+  db:
+    image: postgres:16
+    container_name: db
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "3002:5432"
+    volumes:
+      - type: volume
+        source: best-todo-db
+        target: /var/lib/postgresql
+
+  app:
+    container_name: app
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.app
+    volumes:
+      - type: bind
+        source: ./app
+        target: /app
+      - type: volume
+        target: /app/node_modules
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+
+  api:
+    container_name: api
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.api
+    volumes:
+      - type: volume
+        source: tls
+        target: /root/.symfony5/certs
+      - type: bind
+        source: ./api
+        target: /app
+      - type: volume
+        target: /app/vendor
+    depends_on:
+      - db
+    ports:
+      - "3001:8000"
+
+  mailer:
+    container_name: mailer
+    image: "schickling/mailcatcher"
+    ports:
+      - "3025:1025"
+      - "3080:1080"
+
+volumes:
+  best-todo-db:
+    external: true
+  tls:
