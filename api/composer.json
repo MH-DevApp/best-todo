@@ -73,6 +73,11 @@
         ],
         "post-update-cmd": [
             "@auto-scripts"
+        ],
+        "load-docker": [
+            "docker exec -it api symfony console d:d:d -f --env=dev",
+            "docker exec -it api symfony console d:d:c --env=dev",
+            "docker exec -it api symfony console d:s:u --complete -f --env=dev"
         ]
     },
     "conflict": {
