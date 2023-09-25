@@ -18,6 +18,7 @@ use Symfony\Component\Validator\Constraints\Regex;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[UniqueEntity('email', message: 'Cette adresse email existe déjà, veuillez en saisir une nouvelle.')]
+#[UniqueEntity('pseudo', message: 'Ce pseudo existe déjà, veuillez en saisir un autre.')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -30,6 +31,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[NotBlank(message: 'Une adresse email est requise.')]
     #[Email(message: 'Cette adresse email n\'est pas valide.')]
     private ?string $email = null;
+
+    #[ORM\Column(length: 255, unique: true)]
+    #[NotBlank(message: 'Un pseudo est requis.')]
+    #[Regex(
+        pattern: '/^[a-zA-Z]{2}[a-zA-Z0-9]*$/',
+        message: 'Le pseudo doit commencer par au moins deux lettres et ne peut contenir que des lettres et des chiffres.'
+    )]
+    #[Length(
+        min: 1,
+        max: 255,
+        minMessage: 'Votre pseudo doit contenir au moins {{ limit }} caractères.',
+        maxMessage: 'Votre pseudo doit contenir au maximum {{ limit }} caractères.'
+    )]
+    private ?string $pseudo = null;
 
     #[ORM\Column]
     private array $roles = [];
@@ -130,6 +145,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getUsername(): string
     {
         return (string) $this->email;
+    }
+
+    public function getPseudo(): ?string
+    {
+        return $this->pseudo;
+    }
+
+    public function setPseudo(string $pseudo): static
+    {
+        $this->pseudo = $pseudo;
+
+        return $this;
     }
 
     /**
