@@ -6,6 +6,7 @@ use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation\Groups;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -17,8 +18,9 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Regex;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-#[UniqueEntity('email', message: 'Cette adresse email existe déjà, veuillez en saisir une nouvelle.')]
-#[UniqueEntity('pseudo', message: 'Ce pseudo existe déjà, veuillez en saisir un autre.')]
+#[ORM\Table(name: '`user`')]
+#[UniqueEntity('email', message: 'Cette adresse email existe déjà.')]
+#[UniqueEntity('pseudo', message: 'Ce pseudo existe déjà.')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -30,6 +32,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 180, unique: true)]
     #[NotBlank(message: 'Une adresse email est requise.')]
     #[Email(message: 'Cette adresse email n\'est pas valide.')]
+    #[Groups(['user:register'])]
     private ?string $email = null;
 
     #[ORM\Column(length: 255, unique: true)]
@@ -44,6 +47,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         minMessage: 'Votre pseudo doit contenir au moins {{ limit }} caractères.',
         maxMessage: 'Votre pseudo doit contenir au maximum {{ limit }} caractères.'
     )]
+    #[Groups(['user:register'])]
     private ?string $pseudo = null;
 
     #[ORM\Column]
@@ -63,7 +67,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     )]
     private ?string $password = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Length(
         min: 0,
         max: 255,
