@@ -6,6 +6,7 @@ use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation\Groups;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -17,7 +18,9 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Regex;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-#[UniqueEntity('email', message: 'Cette adresse email existe déjà, veuillez en saisir une nouvelle.')]
+#[ORM\Table(name: '`user`')]
+#[UniqueEntity('email', message: 'Cette adresse email existe déjà.')]
+#[UniqueEntity('pseudo', message: 'Ce pseudo existe déjà.')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -29,7 +32,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 180, unique: true)]
     #[NotBlank(message: 'Une adresse email est requise.')]
     #[Email(message: 'Cette adresse email n\'est pas valide.')]
+    #[Groups(['user:register'])]
     private ?string $email = null;
+
+    #[ORM\Column(length: 255, unique: true)]
+    #[NotBlank(message: 'Un pseudo est requis.')]
+    #[Regex(
+        pattern: '/^[a-zA-Z]{2}[a-zA-Z0-9]*$/',
+        message: 'Le pseudo doit commencer par au moins deux lettres et ne peut contenir que des lettres et des chiffres.'
+    )]
+    #[Length(
+        min: 1,
+        max: 255,
+        minMessage: 'Votre pseudo doit contenir au moins {{ limit }} caractères.',
+        maxMessage: 'Votre pseudo doit contenir au maximum {{ limit }} caractères.'
+    )]
+    #[Groups(['user:register'])]
+    private ?string $pseudo = null;
 
     #[ORM\Column]
     private array $roles = [];
@@ -48,7 +67,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     )]
     private ?string $password = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Length(
         min: 0,
         max: 255,
@@ -130,6 +149,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getUsername(): string
     {
         return (string) $this->email;
+    }
+
+    public function getPseudo(): ?string
+    {
+        return $this->pseudo;
+    }
+
+    public function setPseudo(string $pseudo): static
+    {
+        $this->pseudo = $pseudo;
+
+        return $this;
     }
 
     /**

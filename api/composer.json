@@ -21,6 +21,7 @@
         "symfony/dotenv": "5.4.*",
         "symfony/flex": "^1.17|^2",
         "symfony/framework-bundle": "5.4.*",
+        "symfony/mailer": "5.4.*",
         "symfony/property-access": "5.4.*",
         "symfony/property-info": "5.4.*",
         "symfony/runtime": "5.4.*",
@@ -75,7 +76,7 @@
             "@auto-scripts"
         ],
         "load-docker": [
-            "docker exec -it api symfony console d:d:d -f --env=dev",
+            "docker exec -it api symfony console d:d:d --if-exists -f --env=dev",
             "docker exec -it api symfony console d:d:c --env=dev",
             "docker exec -it api symfony console d:s:u --complete -f --env=dev"
         ]
