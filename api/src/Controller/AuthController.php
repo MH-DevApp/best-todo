@@ -16,6 +16,8 @@ use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -128,12 +130,12 @@ class AuthController extends AbstractController
         $em->persist($user);
         $em->flush();
 
-        $url = '#';
+        $url = "https://localhost:3000/update-to-link-when-created/".$user->getPseudo()."_".$token;
 
         $email = (new TemplatedEmail())
             ->to($user->getEmail())
             ->subject('Bienvenue sur BEST ToDo App - Veuillez confirmer votre adresse email')
-            ->htmlTemplate('emails/register.html.twig')
+            ->htmlTemplate('emails/auth/register.html.twig')
             ->context([
                 'pseudo' => $user->getPseudo(),
                 'url' => $url
@@ -153,6 +155,81 @@ class AuthController extends AbstractController
             $jsonUser,
             Response::HTTP_CREATED,
             json: true
+        );
+    }
+
+
+    /**
+     * @throws TransportExceptionInterface
+     */
+    #[Route(
+        '/confirmation-email/{pseudo}_{token}',
+        name: 'api_auth_confirmation_email',
+        requirements: ['pseudo' => '[a-zA-Z0-9]+', 'token' => '(tk_){1}[a-z0-9]+'],
+        methods: ['GET'])
+    ]
+    public function confirmationEmail(
+        ?string $pseudo,
+        ?string $token,
+        EntityManagerInterface $em,
+        CsrfTokenManagerInterface $csrfTokenManager,
+        MailerInterface $mailer
+    ): JsonResponse
+    {
+        $user = null;
+
+        if ($pseudo) {
+            $user = $em->getRepository(User::class)->findOneBy(['pseudo' => $pseudo]);
+        }
+
+        if (!$user || !$token) {
+            return new JsonResponse(
+                [
+                    "status" => false,
+                    "message" => "La page n'a pas été trouvée."
+                ],
+                Response::HTTP_NOT_FOUND
+            );
+        }
+
+        if (
+            new \DateTimeImmutable('now') > $user->getCEExpiratedAt() ||
+            !$csrfTokenManager->isTokenValid(new CsrfToken($token, $user->getCEToken()))
+        ) {
+            return new JsonResponse(
+                [
+                    "status" => false,
+                    "message" => "Le token n'est plus valide.",
+                    "data" => [
+                        "expired" => new \DateTimeImmutable('now') > $user->getCEExpiratedAt(),
+                        "valid" => $csrfTokenManager->isTokenValid(new CsrfToken($token, $user->getCEToken()))
+                    ]
+                ],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        $user
+            ->setStatus(true)
+            ->setCEExpiratedAt(null)
+            ->setCEToken(null)
+        ;
+
+        $em->flush();
+
+        $email = (new TemplatedEmail())
+            ->to($user->getEmail())
+            ->subject('Bienvenue sur BEST ToDo App - Adresse email confirmé !')
+            ->htmlTemplate('emails/auth/confirm-email.html.twig')
+            ->context([
+                'pseudo' => $user->getPseudo()
+            ]);
+
+        $mailer->send($email);
+
+        return new JsonResponse(
+            [],
+            Response::HTTP_NO_CONTENT
         );
     }
 }
