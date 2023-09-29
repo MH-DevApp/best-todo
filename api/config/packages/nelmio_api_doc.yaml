@@ -1,9 +1,118 @@
 nelmio_api_doc:
     documentation:
         info:
-            title: My App
-            description: This is an awesome app!
+            title: < BEST ToDo App />
+            description: "
+                Application for managing tasks
+            "
             version: 1.0.0
+
+        paths:
+            /api/auth/login_check:
+                post:
+                    operationId: postCredentialsItem
+                    tags:
+                        - Auth
+                    summary: "Permet d'obtenir le token d'authentification."
+                    description: "<b>Permet d'obtenir le token d'authentification.</b><br><br>
+                    La valeur du token précédé par \"bearer\" doit être présente sur la clé \"Authorization\" dans
+                    les headers de chaque requête."
+                    requestBody:
+                        description: "Création d'un nouveau token d'authentification."
+                        content:
+                            application/json:
+                                schema:
+                                    type: object
+                                    properties:
+                                        username:
+                                            type: string
+                                            default: "user@example.com"
+                                        password:
+                                            type: string
+                                            default: "123456dD+"
+                    responses:
+                        "200":
+                            description: "
+                                Identifiant et mot de passe d'authentification corrects.<br>
+                                Récupération du token JWT.
+                            "
+                            content:
+                                application/json:
+                                    schema:
+                                        type: object
+                                        properties:
+                                            status:
+                                                type: boolean
+                                            token:
+                                                type: string
+                                            user:
+                                                type: object
+                                                properties:
+                                                    email:
+                                                        type: string
+                                                    pseudo:
+                                                        type: string
+                                            message:
+                                                type: string
+                                    examples:
+                                        success:
+                                            summary: "Authentification réussie"
+                                            value:
+                                                status: true
+                                                token: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.exJpYXQiOjE2OTEyMzI0NzMsImV4cCI6MTY5MTIzNjA3Mywicm9xZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoiY3VzdG9tZXJAb2MtcDcuZnIifQ.tVAgHQGqux3djeEKw5dgIrkF92qu9WifXN2i7U9s0FuTIeWNzsem6icX5uHhvXXWe4uOmJ46ERlTSGYVvc7yrj3042UNniKZ7bbsS5u4YI-fYSGA5QEZp2WyHoChpStcZxKYQ1J3GoTkqkJinW6T0r_XMLBxhJKsCnfI_LaPsNVEiWwhjP27rX0tfGOMQ908zyQqV71XSaH2_P-OPws-dXqxmpdUuV7Ac8GI8Zs2A1iwOCjyYA7HAjFL5izP5yEGQEKxhQe7PlDrLuqHQsbo83YASwZDFPuFAisMh871j51WdqOeTHwR3CjJT-2YDjXvJwrhyODIWL8qXH-pa49N4rgp76d3sR4dT3ssm1qDlyad2gTuYLZQTbGCZ6sL-dZZhbBn7KEmo5-bTR5gPWnxgsffZw-Dx-m4SWHeVKh8Z3Ty9N3NZ3Kz93-7-H6xadgAYIXbNKiqKL4ttJNIJ93lZ7DzwLoewhYnkkB18ArArOJtTo9rBIAoq9A8WYJ9bm5ig2Q8Ugk89x175ivawExVY-rIa9A2BlMEXBy4nFaBynWcSn-PEHkPeWrWDRtENQf_fPSP83087EMd31InS-iKfVYmfGZmY536C9Q7DwLgH-453boES1nUTESAYpLlyV9AyR_ihQf-FR1RYvTdRAXrRLfXZrnuXgL3gwPbJMGBeJ0"
+                                                user:
+                                                    email: "user@example.com"
+                                                    pseudo: "User"
+                                                message: "Vous êtes maintenant connecté."
+                                        email_not_confirmed:
+                                            summary: "Email non confirmé"
+                                            value:
+                                                status: false
+                                                message: "Vous n'avez pas confirmé votre email."
+                                        account_inactive:
+                                            summary: "Compte inactif"
+                                            value:
+                                                status: false
+                                                message: "Votre compte est inactif."
+
+                        "400":
+                            description: "Clé d'une propriété manquante ou format JSON invalide."
+                            content:
+                                application/json:
+                                    schema:
+                                        type: object
+                                        properties:
+                                            code:
+                                                type: int
+                                                readOnly: true
+                                                example: 400
+                                            message:
+                                                type: string
+                                                readOnly: true
+                                                example: "The key \"email\" must be provided."
+                        "401":
+                            description: "Identifiant ou mot de passe incorrect."
+                            content:
+                                application/json:
+                                    schema:
+                                        type: object
+                                        properties:
+                                            code:
+                                                type: int
+                                                readOnly: true
+                                                example: 401
+                                            message:
+                                                type: string
+                                                readOnly: true
+                                                example: "Identifiants invalides."
+        components:
+            securitySchemes:
+                Bearer:
+                    type: http
+                    scheme: bearer
+                    bearerFormat: JWT
+        security:
+            - Bearer: []
     areas: # to filter documented areas
         path_patterns:
             - ^/api(?!/doc$) # Accepts routes under /api except /api/doc
